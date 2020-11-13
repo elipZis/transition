@@ -1,11 +1,14 @@
 # Transition
+[![GitHub license](https://img.shields.io/github/license/elipzis/transition.svg)](https://github.com/elipzis/transition/blob/master/LICENSE.md)
+_This is based on the excellent work of https://github.com/qor/transition and updates it to [GORM v2](https://gorm.io/docs/v2_release_note.html)_
 
 Transition is a [Golang](http://golang.org/) [*state machine*](https://en.wikipedia.org/wiki/Finite-state_machine) implementation.
 
-it can be used standalone, but it integrates nicely with [GORM](https://github.com/jinzhu/gorm) models. When integrated with [GORM](https://github.com/jinzhu/gorm), it will also store state change logs in the database automatically.
+it can be used standalone, but it integrates nicely with [GORM][1] models. 
+When integrated with [GORM][1], it will also store state change logs in the database automatically.
 
-[![GoDoc](https://godoc.org/github.com/qor/transition?status.svg)](https://godoc.org/github.com/qor/transition)
-[![Build Status](https://travis-ci.com/qor/transition.svg?branch=master)](https://travis-ci.com/qor/transition)
+[![GoDoc](https://godoc.org/github.com/elipzis/transition?status.svg)](https://godoc.org/github.com/elipzis/transition)
+[![Build Status](https://travis-ci.com/elipzis/transition.svg?branch=master)](https://travis-ci.com/elipzis/transition)
 
 # Usage
 
@@ -14,7 +17,7 @@ it can be used standalone, but it integrates nicely with [GORM](https://github.c
 Embed `transition.Transition` into your struct, it will enable the state machine feature for the struct:
 
 ```go
-import "github.com/qor/transition"
+import "github.com/elipzis/transition"
 
 type Order struct {
   ID uint
@@ -97,7 +100,7 @@ order.SetState("finished") // this will only update order's state, won't save it
 
 ## State change logs
 
-When working with [GORM](https://github.com/jinzhu/gorm), `Transition` will store all state change logs in the database. Use `GetStateChangeLogs` to get those logs.
+When working with [GORM][1], `Transition` will store all state change logs in the database. Use `GetStateChangeLogs` to get those logs.
 
 ```go
 // create the table used to store logs first
@@ -116,3 +119,5 @@ var stateChangeLogs = transition.GetStateChangeLogs(&order, db)
 ## License
 
 Released under the [MIT License](http://opensource.org/licenses/MIT).
+
+  [1]: https://gorm.io/docs/

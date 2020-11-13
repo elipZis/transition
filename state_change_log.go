@@ -1,14 +1,13 @@
 package transition
 
 import (
-	"fmt"
 	"strings"
 
-	"github.com/jinzhu/gorm"
 	"github.com/qor/admin"
 	"github.com/qor/audited"
 	"github.com/qor/qor/resource"
 	"github.com/qor/roles"
+	"gorm.io/gorm"
 )
 
 // StateChangeLog a model that used to keep state change logs
@@ -24,13 +23,12 @@ type StateChangeLog struct {
 
 // GenerateReferenceKey generate reference key used for change log
 func GenerateReferenceKey(model interface{}, db *gorm.DB) string {
-	var (
-		scope         = db.NewScope(model)
-		primaryValues []string
-	)
+	var primaryValues []string
 
-	for _, field := range scope.PrimaryFields() {
-		primaryValues = append(primaryValues, fmt.Sprint(field.Field.Interface()))
+	stmt := &gorm.Statement{DB: db}
+	_ = stmt.Parse(model)
+	for _, field := range stmt.Schema.PrimaryFields {
+		primaryValues = append(primaryValues, field.Name)
 	}
 
 	return strings.Join(primaryValues, "::")
@@ -38,24 +36,22 @@ func GenerateReferenceKey(model interface{}, db *gorm.DB) string {
 
 // GetStateChangeLogs get state change logs
 func GetStateChangeLogs(model interface{}, db *gorm.DB) []StateChangeLog {
-	var (
-		changelogs []StateChangeLog
-		scope      = db.NewScope(model)
-	)
+	var changelogs []StateChangeLog
 
-	db.Where("refer_table = ? AND refer_id = ?", scope.TableName(), GenerateReferenceKey(model, db)).Find(&changelogs)
+	stmt := &gorm.Statement{DB: db}
+	_ = stmt.Parse(model)
+	db.Where("refer_table = ? AND refer_id = ?", stmt.Schema.Table, GenerateReferenceKey(model, db)).Find(&changelogs)
 
 	return changelogs
 }
 
 // GetLastStateChange gets last state change
 func GetLastStateChange(model interface{}, db *gorm.DB) *StateChangeLog {
-	var (
-		changelog StateChangeLog
-		scope      = db.NewScope(model)
-	)
+	var changelog StateChangeLog
 
-	db.Where("refer_table = ? AND refer_id = ?", scope.TableName(), GenerateReferenceKey(model, db)).Last(&changelog)
+	stmt := &gorm.Statement{DB: db}
+	_ = stmt.Parse(model)
+	db.Where("refer_table = ? AND refer_id = ?", stmt.Schema.Table, GenerateReferenceKey(model, db)).Last(&changelog)
 	if changelog.To == "" {
 		return nil
 	}

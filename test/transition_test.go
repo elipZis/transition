@@ -1,14 +1,12 @@
-package transition_test
+package test
 
 import (
 	"errors"
 	"testing"
 
-	"github.com/jinzhu/gorm"
-	_ "github.com/mattn/go-sqlite3"
+	"gorm.io/gorm"
 
-	"github.com/qor/qor/test/utils"
-	"github.com/qor/transition"
+	"github.com/elipzis/transition"
 )
 
 type Order struct {
@@ -18,15 +16,15 @@ type Order struct {
 	transition.Transition
 }
 
-var db = utils.TestDB()
+var db = TestDB()
 
 func init() {
 	for _, model := range []interface{}{&Order{}, &transition.StateChangeLog{}} {
-		if err := db.DropTableIfExists(model).Error; err != nil {
+		if err := db.Migrator().DropTable(model); err != nil {
 			panic(err)
 		}
 
-		if err := db.AutoMigrate(model).Error; err != nil {
+		if err := db.AutoMigrate(model); err != nil {
 			panic(err)
 		}
 	}

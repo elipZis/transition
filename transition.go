@@ -4,16 +4,16 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/jinzhu/gorm"
 	"github.com/qor/admin"
 	"github.com/qor/qor/resource"
 	"github.com/qor/roles"
+	"gorm.io/gorm"
 )
 
 // Transition is a struct, embed it in your struct to enable state machine for the struct
 type Transition struct {
 	State           string
-	StateChangeLogs []StateChangeLog `sql:"-"`
+	StateChangeLogs []StateChangeLog `gorm:"-"`
 }
 
 // SetState set state to Stater, just set, won't save it into database
@@ -68,14 +68,19 @@ func (sm *StateMachine) Event(name string) *Event {
 }
 
 // Trigger trigger an event
-func (sm *StateMachine) Trigger(name string, value Stater, tx *gorm.DB, notes ...string) error {
+func (sm *StateMachine) Trigger(name string, value Stater, db *gorm.DB, notes ...string) error {
 	var (
-		newTx    *gorm.DB
+		tx       *gorm.DB
 		stateWas = value.GetState()
 	)
 
-	if tx != nil {
-		newTx = tx.New()
+	if db != nil {
+		tx = db.Begin()
+		defer func() {
+			if r := recover(); r != nil {
+				tx.Rollback()
+			}
+		}()
 	}
 
 	if stateWas == "" {
@@ -106,7 +111,7 @@ func (sm *StateMachine) Trigger(name string, value Stater, tx *gorm.DB, notes ..
 			// State: exit
 			if state, ok := sm.states[stateWas]; ok {
 				for _, exit := range state.exits {
-					if err := exit(value, newTx); err != nil {
+					if err := exit(value, tx); err != nil {
 						return err
 					}
 				}
@@ -114,7 +119,7 @@ func (sm *StateMachine) Trigger(name string, value Stater, tx *gorm.DB, notes ..
 
 			// Transition: before
 			for _, before := range transition.befores {
-				if err := before(value, newTx); err != nil {
+				if err := before(value, tx); err != nil {
 					return err
 				}
 			}
@@ -124,7 +129,7 @@ func (sm *StateMachine) Trigger(name string, value Stater, tx *gorm.DB, notes ..
 			// State: enter
 			if state, ok := sm.states[transition.to]; ok {
 				for _, enter := range state.enters {
-					if err := enter(value, newTx); err != nil {
+					if err := enter(value, tx); err != nil {
 						value.SetState(stateWas)
 						return err
 					}
@@ -133,22 +138,31 @@ func (sm *StateMachine) Trigger(name string, value Stater, tx *gorm.DB, notes ..
 
 			// Transition: after
 			for _, after := range transition.afters {
-				if err := after(value, newTx); err != nil {
+				if err := after(value, tx); err != nil {
 					value.SetState(stateWas)
 					return err
 				}
 			}
 
-			if newTx != nil {
-				scope := newTx.NewScope(value)
-				log := StateChangeLog{
-					ReferTable: scope.TableName(),
-					ReferID:    GenerateReferenceKey(value, tx),
-					From:       stateWas,
-					To:         transition.to,
-					Note:       strings.Join(notes, ""),
+			if tx != nil {
+				err := tx.Transaction(func(tx2 *gorm.DB) error {
+					stmt := &gorm.Statement{DB: db}
+					_ = stmt.Parse(value)
+					log := StateChangeLog{
+						ReferTable: stmt.Schema.Table,
+						ReferID:    GenerateReferenceKey(value, db),
+						From:       stateWas,
+						To:         transition.to,
+						Note:       strings.Join(notes, ""),
+					}
+					return tx2.Save(&log).Error
+				})
+
+				if err != nil {
+					return tx.Rollback().Error
 				}
-				return newTx.Save(&log).Error
+				tx.Save(value)
+				return tx.Commit().Error
 			}
 
 			return nil
