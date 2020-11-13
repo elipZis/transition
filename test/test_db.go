@@ -14,7 +14,7 @@ import (
 func TestDB() *gorm.DB {
 	var db *gorm.DB
 	var err error
-	var dbuser, dbpwd, dbname, dbhost = "qor", "qor", "qor_test", "localhost"
+	var dbuser, dbpwd, dbname, dbhost = "elipzis", "elipzis", "elipzis_test", "localhost"
 
 	if os.Getenv("DB_USER") != "" {
 		dbuser = os.Getenv("DB_USER")

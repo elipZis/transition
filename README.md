@@ -1,13 +1,13 @@
 # Transition
+[![GoDoc](https://godoc.org/github.com/elipzis/transition?status.svg)](https://godoc.org/github.com/elipzis/transition)
+[![Build Status](https://travis-ci.com/elipzis/transition.svg?branch=master)](https://travis-ci.com/elipzis/transition)
+
 _This is based on the excellent work of https://github.com/qor/transition and updates it to [GORM v2](https://gorm.io/docs/v2_release_note.html)_
 
 Transition is a [Golang](http://golang.org/) [*state machine*](https://en.wikipedia.org/wiki/Finite-state_machine) implementation.
 
 it can be used standalone, but it integrates nicely with [GORM][1] models. 
 When integrated with [GORM][1], it will also store state change logs in the database automatically.
-
-[![GoDoc](https://godoc.org/github.com/elipzis/transition?status.svg)](https://godoc.org/github.com/elipzis/transition)
-[![Build Status](https://travis-ci.com/elipzis/transition.svg?branch=master)](https://travis-ci.com/elipzis/transition)
 
 # Usage
 
