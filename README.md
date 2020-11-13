@@ -2,7 +2,7 @@
 [![GoDoc](https://godoc.org/github.com/elipzis/transition?status.svg)](https://godoc.org/github.com/elipzis/transition)
 [![Build Status](https://travis-ci.com/elipzis/transition.svg?branch=master)](https://travis-ci.com/elipzis/transition)
 
-_This is based on the excellent work of https://github.com/qor/transition and updates it to [GORM v2](https://gorm.io/docs/v2_release_note.html)_
+_This is a fork of the work of https://github.com/qor/transition and updates it to [GORM v2](https://gorm.io/docs/v2_release_note.html)_
 
 Transition is a [Golang](http://golang.org/) [*state machine*](https://en.wikipedia.org/wiki/Finite-state_machine) implementation.
 
